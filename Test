@@ -1,0 +1,74 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Threading;
+using System.Speech.Synthesis;
+using System.Speech;
+
+
+namespace Monitor
+{
+    //ENTRY POINT
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            //Willkommen
+            Console.Write("Bitte gib deinen Namen ein:");
+            string Name = Console.ReadLine();
+ 
+
+            SpeechSynthesizer synth = new SpeechSynthesizer();
+
+            synth.SelectVoiceByHints(VoiceGender.Male);
+            synth.Speak("Willkommen {0}!", Name);
+
+
+
+            #region Perfomance Counter
+            PerformanceCounter perfCpuCount = new PerformanceCounter("Processor Information", "% Processor Time", "_Total");
+            PerformanceCounter perfMemCount = new PerformanceCounter("Memory", "Available MBytes");
+            PerformanceCounter perfUpTime = new PerformanceCounter("System", "System Up Time");
+#endregion
+
+
+            //inf lopp
+            while (true)
+            {
+                //Get current counter values
+                int currentCpuPercentage = (int)perfCpuCount.NextValue();
+                int currentAvailableMemory = (int)perfMemCount.NextValue();
+
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("CPU Load: {0}%", currentCpuPercentage);
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("Memory: {0}MB", currentAvailableMemory);
+
+                if( currentCpuPercentage > 80 )
+                {
+                    if(currentCpuPercentage == 100 )
+                    {
+                        string CpuLoadVocalMessage = String.Format("WARNUNG!");
+                        synth.Speak(CpuLoadVocalMessage);
+                    }
+                    else {
+                    
+                    string CpuLoadVocalMessage = String.Format("Prozessornutzung bei {0} prozent", currentCpuPercentage);
+                    synth.Speak(CpuLoadVocalMessage);
+                    }
+                }
+                if(currentAvailableMemory < 1024)
+                {
+                    string memAvailableVocalMessage = String.Format("Verfügerbarer Arbeitsspeicher betraegt {0} Megabyte", currentAvailableMemory);
+                    synth.Speak(memAvailableVocalMessage);
+                }
+
+                Thread.Sleep(1000);
+            }//end of loop
+        
+        }
+    }
+}
